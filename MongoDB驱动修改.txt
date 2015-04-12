@@ -1,0 +1,79 @@
+一、解决文件过大问题：
+
+namespace MongoDB.Protocol
+{
+    /// <summary>
+    /// Base class for all raw messages
+    /// </summary>
+    internal abstract class MessageBase
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        protected const int MaximumMessageSize = 1024 * 1024 * 4 * 10;
+
+        /// <summary>
+        /// Gets or sets the header.
+        /// </summary>
+        /// <value>The header.</value>
+        public MessageHeader Header { get; protected set; }
+    }
+}
+
+
+****************************************************
+using System;
+
+namespace MongoDB.Bson
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class BsonInfo
+    {
+        /// <summary>
+        /// Initializes the <see cref="BsonInfo"/> class.
+        /// </summary>
+        static BsonInfo(){
+            Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            MaxDocumentSize = 1024 * 1024 * 4*10; //4MB.
+        }
+
+        /// <summary>
+        /// Gets or sets the epoch.
+        /// </summary>
+        /// <value>The epoch.</value>
+        public static DateTime Epoch { get; private set; }
+        
+        /// <summary>
+        /// The maximum size a document can be.
+        /// </summary>
+        public static int MaxDocumentSize { get; private set; }
+    }
+}
+
+
+二、解决统计个数是异常问题：
+
+****************************************************
+namespace MongoDB
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public class MongoCollection<T> : IMongoCollection<T> where T : class
+
+
+
+
+
+     public long Count(object spec){
+            try {
+                var response = Database.SendCommand(typeof(T),new Document().Add("count", Name).Add("query", spec));
+                return Convert.ToInt64((double)response["n"]);//------->Convert.ToInt64(response["n"])
+            } catch (MongoCommandException) {
+                //FIXME This is an exception condition when the namespace is missing. 
+                //-1 might be better here but the console returns 0.
+                return 0;
+            }
+        }
